@@ -1,0 +1,30 @@
+{
+  "name": "shutup",
+  "version": "1.0.0",
+  "description": "Concise, neutral responses for Claude Code.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/shutup-activate.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/shutup-activate.js\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

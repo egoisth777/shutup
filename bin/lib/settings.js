@@ -1,8 +1,10 @@
-// caveman — JSONC-tolerant settings.json read/write + defensive hook validation.
+// shutup — JSONC-tolerant settings.json read/write + defensive hook validation.
 //
 // Lifted in spirit from gsd-build/get-shit-done's stripJsonComments + readSettings.
-// Reused by bin/install.js and (optionally) by hooks/caveman-activate.js so a
+// Reused by bin/install.js and (optionally) by plugin/hooks/shutup-activate.js so a
 // commented settings.json no longer crashes the installer or the runtime hooks.
+// Legacy "caveman" hook basenames are kept on purpose: --uninstall must also
+// clean installs made by the upstream caveman plugin.
 //
 // Public API:
 //   readSettings(path)             → object, {}, or null on hard parse failure
@@ -11,7 +13,7 @@
 //   validateHookFields(settings)   → mutates: drops malformed hook entries
 //   hasCavemanHook(settings, ev)   → idempotency probe
 //   addCommandHook(settings, ev, opts) → no-op if substring marker already present
-//   removeCavemanHooks(settings)   → uninstall helper
+//   removeShutupHooks(settings)    → uninstall helper
 //
 // Pure stdlib, CommonJS, Node ≥14.
 
@@ -100,14 +102,14 @@ function readSettings(p) {
   let raw;
   try { raw = fs.readFileSync(p, 'utf8'); }
   catch (e) {
-    process.stderr.write(`caveman: cannot read ${p}: ${e.message}\n`);
+    process.stderr.write(`shutup: cannot read ${p}: ${e.message}\n`);
     return null;
   }
   if (!raw.trim()) return {};
   try { return JSON.parse(raw); } catch (_) { /* fall through to JSONC */ }
   try { return JSON.parse(stripJsonComments(raw)); }
   catch (e) {
-    process.stderr.write(`caveman: warning — ${p} is not valid JSON or JSONC: ${e.message}\n`);
+    process.stderr.write(`shutup: warning — ${p} is not valid JSON or JSONC: ${e.message}\n`);
     return null;
   }
 }
@@ -184,6 +186,8 @@ function addCommandHook(settings, event, opts) {
 // against a bare "caveman" substring, which also matches user-authored hooks
 // that merely mention the word in a path (issue #593).
 const MANAGED_HOOK_BASENAMES = new Set([
+  'shutup-activate.js',
+  'shutup-reinforce.js',
   'caveman-activate.js',
   'caveman-mode-tracker.js',
   'caveman-stats.js',
@@ -217,13 +221,13 @@ function referencesManagedScript(command) {
   return false;
 }
 
-// ── removeCavemanHooks ────────────────────────────────────────────────────
+// ── removeShutupHooks ─────────────────────────────────────────────────────
 // Strip every entry whose any hook command targets one of our managed hook
 // scripts (exact basename match, see above). Empties events. Tolerates
 // malformed pre-existing settings (non-array hook lists, foreign shapes) —
 // those get dropped by validateHookFields first so we never call .length /
 // .filter on a non-array.
-function removeCavemanHooks(settings) {
+function removeShutupHooks(settings) {
   if (!settings || !settings.hooks) return 0;
   validateHookFields(settings);
   if (!settings.hooks) return 0; // validate may have deleted the whole tree
@@ -280,7 +284,7 @@ function rewriteLegacyManagedHookCommands(settings, absoluteNode) {
 // UserPromptSubmit and crashes with `node:…/loader:1478 — Cannot find module
 // …caveman-activate.js` (issue #471). rewriteLegacyManagedHookCommands can't
 // help — it only matches the bare-node shape and these orphans are usually
-// absolute-node — and removeCavemanHooks runs only on uninstall.
+// absolute-node — and removeShutupHooks runs only on uninstall.
 //
 // We extract the script path from any managed-looking command (bare- or
 // absolute-node, quoted or not), resolve it relative to dir if not absolute,
@@ -353,7 +357,7 @@ module.exports = {
   validateHookFields,
   hasCavemanHook,
   addCommandHook,
-  removeCavemanHooks,
+  removeShutupHooks,
   rewriteLegacyManagedHookCommands,
   pruneOrphanedManagedHooks,
   claudeConfigDir,

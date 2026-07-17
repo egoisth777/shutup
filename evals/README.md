@@ -1,6 +1,6 @@
 # Evals
 
-Measures real token compression of caveman skills by running the same
+Measures Shutup output length by running the same
 prompts through Claude Code under three conditions and comparing the
 generated output token counts.
 
@@ -49,7 +49,7 @@ This calls Claude once per prompt × (N skills + 2 control arms). Use
 a small model to keep it cheap:
 
 ```bash
-CAVEMAN_EVAL_MODEL=claude-haiku-4-5 uv run python evals/llm_run.py
+SHUTUP_EVAL_MODEL=claude-haiku-4-5 uv run python evals/llm_run.py
 ```
 
 ## Read the snapshot (no LLM, no API key, runs in CI)
@@ -64,13 +64,13 @@ Append a line to `prompts/en.txt`, then refresh the snapshot.
 
 ## Adding a skill
 
-Drop a `skills/<name>/SKILL.md`, then refresh the snapshot. `llm_run.py`
+Drop a `plugin/skills/<name>/SKILL.md`, then refresh the snapshot. `llm_run.py`
 picks up every skill directory automatically.
 
 ## What this does NOT measure
 
 - **Fidelity** — does the compressed answer preserve the technical
-  claims? A skill that replies `k` to everything would score −99% and
+  claims? A skill that replies `k` to everything could appear to win while
   "win". A future v2 could add a judge-model rubric.
 - **Latency or cost** — out of scope. Note that skills add input tokens
   on every call, so output savings are not the full economic picture.

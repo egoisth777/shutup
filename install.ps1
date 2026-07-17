@@ -1,10 +1,10 @@
-# caveman — installer shim (Windows / PowerShell).
+# shutup — installer shim (Windows / PowerShell).
 #
 # Thin wrapper around bin/install.js (the unified Node installer). Every flag
 # you'd pass to bin/install.js can be passed here; we just forward them.
 #
 # One-line install:
-#   irm https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/egoisth777/shutup/main/install.ps1 | iex
 #
 # Local clone:
 #   pwsh install.ps1 [flags]
@@ -21,19 +21,19 @@
 # a function and forwarding $args keeps one script working for both the pipe
 # path (no args, no script path) and the local-clone path.
 
-function Install-Caveman {
+function Install-Shutup {
   param(
     [string[]]$InstallerArgs = @()
   )
 
   $ErrorActionPreference = "Stop"
-  $Repo = "JuliusBrussee/caveman"
+  $Repo = "egoisth777/shutup"
 
   # Require Node ≥18.
   $node = Get-Command node -ErrorAction SilentlyContinue
   if (-not $node) {
     Write-Error @"
-caveman: Node.js (>=18) required. Install:
+shutup: Node.js (>=18) required. Install:
   - winget install OpenJS.NodeJS.LTS
   - or download from https://nodejs.org
 "@
@@ -42,7 +42,7 @@ caveman: Node.js (>=18) required. Install:
 
   $nodeMajor = [int](& node -p "process.versions.node.split('.')[0]")
   if ($nodeMajor -lt 18) {
-    Write-Error "caveman: Node $nodeMajor too old. Need Node >=18. Upgrade: https://nodejs.org"
+    Write-Error "shutup: Node $nodeMajor too old. Need Node >=18. Upgrade: https://nodejs.org"
     exit 1
   }
 
@@ -62,7 +62,7 @@ caveman: Node.js (>=18) required. Install:
   # Curl-pipe path: delegate to npx.
   $npx = Get-Command npx -ErrorAction SilentlyContinue
   if (-not $npx) {
-    Write-Error "caveman: npx required (ships with Node >=18). Reinstall Node.js."
+    Write-Error "shutup: npx required (ships with Node >=18). Reinstall Node.js."
     exit 1
   }
 
@@ -75,4 +75,4 @@ caveman: Node.js (>=18) required. Install:
 
 # $args is the automatic variable: populated when run as a file
 # (`pwsh install.ps1 --force`), empty under `irm | iex`.
-Install-Caveman -InstallerArgs $args
+Install-Shutup -InstallerArgs $args

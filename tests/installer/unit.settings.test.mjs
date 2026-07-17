@@ -134,34 +134,35 @@ test('hasCavemanHook detects via substring', () => {
   assert.equal(SETTINGS.hasCavemanHook(s, 'UserPromptSubmit'), false);
 });
 
-test('removeCavemanHooks tolerates malformed hook event values without throwing', () => {
+test('removeShutupHooks tolerates malformed hook event values without throwing', () => {
   // Pre-fix bug: settings.hooks.SessionStart = "oops" (string, not array)
   // would crash on .filter(...) inside the filter loop. Fix delegates to
   // validateHookFields first + adds Array.isArray guard.
   const s = { hooks: { SessionStart: "oops", UserPromptSubmit: { not: 'an array either' } } };
   let removed;
-  assert.doesNotThrow(() => { removed = SETTINGS.removeCavemanHooks(s); });
+  assert.doesNotThrow(() => { removed = SETTINGS.removeShutupHooks(s); });
   assert.equal(removed, 0);
   assert.equal(s.hooks, undefined);
 });
 
-test('removeCavemanHooks strips managed scripts and cleans empties', () => {
+test('removeShutupHooks strips legacy and current managed scripts', () => {
   const s = {
     hooks: {
       SessionStart: [
         { hooks: [{ type: 'command', command: 'node /x/hooks/caveman-activate.js' }] },
+        { hooks: [{ type: 'command', command: 'node /x/hooks/shutup-activate.js' }] },
         { hooks: [{ type: 'command', command: 'other' }] },
       ],
       UserPromptSubmit: [{ hooks: [{ type: 'command', command: '"/usr/bin/node" "/x/hooks/caveman-mode-tracker.js"' }] }],
     },
   };
-  const removed = SETTINGS.removeCavemanHooks(s);
-  assert.equal(removed, 2);
+  const removed = SETTINGS.removeShutupHooks(s);
+  assert.equal(removed, 3);
   assert.equal(s.hooks.SessionStart.length, 1);
   assert.equal(s.hooks.UserPromptSubmit, undefined);
 });
 
-test('removeCavemanHooks leaves user hooks that merely mention caveman (issue #593)', () => {
+test('removeShutupHooks leaves similarly named user hooks', () => {
   const s = {
     hooks: {
       PreToolUse: [
@@ -175,19 +176,19 @@ test('removeCavemanHooks leaves user hooks that merely mention caveman (issue #5
       ],
     },
   };
-  const removed = SETTINGS.removeCavemanHooks(s);
+  const removed = SETTINGS.removeShutupHooks(s);
   assert.equal(removed, 1, 'only the managed SessionStart hook should be removed');
   assert.equal(s.hooks.PreToolUse.length, 2, 'user hooks mentioning caveman must survive uninstall');
   assert.equal(s.hooks.SessionStart, undefined);
 });
 
-test('removeCavemanHooks removes the Windows statusline-stats wiring (caveman-stats.js / .ps1)', () => {
+test('removeShutupHooks removes legacy Windows statusline wiring', () => {
   const s = {
     hooks: {
       Stop: [{ hooks: [{ type: 'command', command: '"C:\\Program Files\\nodejs\\node.exe" "C:\\Users\\me\\.claude\\hooks\\caveman-stats.js"' }] }],
     },
   };
-  const removed = SETTINGS.removeCavemanHooks(s);
+  const removed = SETTINGS.removeShutupHooks(s);
   assert.equal(removed, 1);
   assert.equal(s.hooks, undefined);
 });
